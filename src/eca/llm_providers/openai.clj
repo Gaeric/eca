@@ -81,10 +81,11 @@
                                     :throw-exceptions? false
                                     :http-client (client/merge-with-global-http-client http-client)
                                     :as (if on-stream :stream :json)})]
+        (logger/info logger-tag rid "Response status:" status)
         (if (not= 200 status)
           (let [body-str (if on-stream (slurp body) body)]
-            (logger/warn logger-tag "Unexpected response status: %s body: %s" status body-str)
-            (on-error {:message (format "OpenAI response status: %s body: %s" status body-str)
+            (logger/warn logger-tag rid "Unexpected response status:" status "url:" url "body:" body-str)
+            (on-error {:message (format "OpenAI response status: %s url: %s body: %s" status url body-str)
                        :status status
                        :body body-str}))
           (if on-stream
@@ -98,6 +99,7 @@
       (catch Exception e
         (let [msg (or (ex-message e) (.getName (class e)))
               prefix (if (ex-data e) "Internal error" "Connection error")]
+          (logger/error logger-tag rid (str prefix ":") msg "url:" url)
           (on-error {:exception e
                      :message (format "%s: %s" prefix msg)}))))))
 

@@ -116,10 +116,11 @@
                                     :throw-exceptions? false
                                     :http-client (client/merge-with-global-http-client http-client)
                                     :as (if on-stream :stream :json)})]
+        (logger/info logger-tag rid "Response status:" status)
         (if (not= 200 status)
           (let [body-str (if on-stream (slurp body) body)]
-            (logger/warn logger-tag "Unexpected response status: %s body: %s" status body-str)
-            (on-error {:message (format "Anthropic response status: %s body: %s" status body-str)
+            (logger/warn logger-tag rid "Unexpected response status:" status "url:" url "body:" body-str)
+            (on-error {:message (format "Anthropic response status: %s url: %s body: %s" status url body-str)
                        :status status
                        :body body-str}))
           (if on-stream
@@ -169,6 +170,7 @@
               (reset! response*
                       {:output-text (:text (last (:content body)))})))))
       (catch Exception e
+        (logger/error logger-tag rid "Connection error:" (or (ex-message e) (.getName (class e))) "url:" url)
         (on-error {:exception e
                    :message (format "Connection error: %s" (or (ex-message e) (.getName (class e))))})))
     @response*))

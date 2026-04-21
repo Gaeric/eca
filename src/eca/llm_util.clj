@@ -81,8 +81,14 @@
 (defn log-request [tag rid url body headers]
   (let [obfuscated-headers (-> headers
                                (shared/update-some "Authorization" #(shared/obfuscate % {:preserve-num 8}))
-                               (shared/update-some "x-api-key" shared/obfuscate))]
-    (logger/debug tag (format "[%s] Sending body: '%s', headers: '%s', url: '%s'" rid body obfuscated-headers url))))
+                               (shared/update-some "x-api-key" shared/obfuscate))
+        body-str (str body)
+        truncated-body (if (> (count body-str) 200)
+                         (str (subs body-str 0 200) "... [truncated, total " (count body-str) " chars]")
+                         body-str)]
+    (logger/info tag (format "[%s] Sending request to %s" rid url))
+    (logger/info tag (format "[%s] Headers: %s" rid obfuscated-headers))
+    (logger/info tag (format "[%s] Body: %s" rid truncated-body))))
 
 (defn log-response [tag rid event data]
   (logger/debug tag (format "[%s] %s %s" rid (or event "") data)))

@@ -199,6 +199,8 @@
                      :on-reason on-reason
                      :on-usage-updated on-usage-updated
                      :on-server-web-search on-server-web-search})]
+    (logger/info logger-tag (format "Prompt request: provider=%s model=%s real-model=%s api-url=%s auth-type=%s stream?=%s"
+                                    provider model real-model api-url auth-type (not sync?)))
     (try
       (when-not api-url (throw (ex-info (format "API url not found.\nMake sure you have provider '%s' configured properly." provider) {})))
       (cond
